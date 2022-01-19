@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../models/product.dart';
+import './product.dart';
+
+// state = data (which may change over time) used by the app to render the ui
 
 class Products with ChangeNotifier {
   List<Product> _items = [
@@ -38,10 +40,33 @@ class Products with ChangeNotifier {
     ),
   ];
 
+  // var _showFavoritesOnly = false;
+
   List<Product> get items {
     // returns a copy of _items
+    // if (_showFavoritesOnly) {
+    //   return _items.where((prodItem) => prodItem.isFavorite).toList();
+    // }
     return [..._items];
   }
+
+  List<Product> get favoriteItems {
+    return _items.where((prodItem) => prodItem.isFavorite).toList();
+  }
+
+  Product findById(String id) {
+    return _items.firstWhere((prod) => prod.id == id);
+  }
+
+  // void showFavoritesOnly() {
+  //   _showFavoritesOnly = true;
+  //   notifyListeners();
+  // }
+
+  // void showAll() {
+  //   _showFavoritesOnly = false;
+  //   notifyListeners();
+  // }
 
   void addProduct() {
     // _items.add();
