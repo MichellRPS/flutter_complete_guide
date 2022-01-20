@@ -19,3 +19,5 @@ samples, guidance on mobile development, and a full API reference.
 
 - [Official Provider Docs/Repo](https://pub.dev/packages/provider)
 - [Official State Management Docs](https://flutter.dev/docs/development/data-and-backend/state-mgmt/intro)
+- [More About Regular Expression Language](https://www.youtube.com/playlist?list=PL55RiY5tL51ryV3MhCbH8bLl7O_RZGUUE)
+- [Official Input & Forms Docs](https://flutter.dev/docs/cookbook#forms)
