@@ -28,3 +28,5 @@ samples, guidance on mobile development, and a full API reference.
 - [More on Sending Http Requests](https://flutter.dev/docs/cookbook/networking/fetch-data)
 - [Firebase Security Rules](https://firebase.google.com/docs/database/security)
 - [Firebase Auth REST API](https://firebase.google.com/docs/reference/rest/auth)
+- [More on JSON Web Tokens](http://jwt.io/)
+- [Shared Preferences plugin](https://pub.dev/packages/shared_preferences/)

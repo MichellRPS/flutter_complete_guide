@@ -46,8 +46,9 @@ class Products with ChangeNotifier {
 
   // var _showFavoritesOnly = false;
   final String authToken;
+  final String userId;
 
-  Products(this.authToken, this._items);
+  Products(this.authToken, this.userId, this._items);
 
   List<Product> get items {
     // returns a copy of _items
@@ -75,9 +76,12 @@ class Products with ChangeNotifier {
   //   notifyListeners();
   // }
 
-  Future<void> fetchAndSetProducts() async {
-    final url = Uri.parse(
-        'flutter-shop-app-dd4d4-default-rtdb.firebaseio.com/products.json?auth=$authToken');
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    final filterString =
+        filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
+
+    var url = Uri.parse(
+        'https://flutter-shop-app-dd4d4-default-rtdb.firebaseio.com/products.json?auth=$authToken&$filterString');
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
@@ -85,6 +89,14 @@ class Products with ChangeNotifier {
       if (extractedData == null) {
         return;
       }
+
+      // another request
+      url = Uri.parse(
+          'https://flutter-shop-app-dd4d4-default-rtdb.firebaseio.com/userFavorites/$userId.json?auth=$authToken');
+
+      final favoriteResponse = await http.get(url);
+
+      final favoriteData = json.decode(favoriteResponse.body);
 
       final List<Product> loadedProducts = [];
 
@@ -94,7 +106,9 @@ class Products with ChangeNotifier {
           title: prodData['title'],
           description: prodData['description'],
           price: prodData['price'],
-          isFavorite: prodData['isFavorite'],
+          // ?? checks if it's null (if it is, it receives the value after it)
+          isFavorite:
+              favoriteData == null ? false : favoriteData[prodId] ?? false,
           imageUrl: prodData['imageUrl'],
         ));
       });
@@ -106,11 +120,11 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
+    // the following line is a http request url
+    // obs.: /products.json means that a database called products will be created (if it does not exist)
+    final url = Uri.parse('https://flutter-shop-app-dd4d4-default-rtdb.firebaseio.com/products.json?auth=$authToken');
+
     try {
-      // the following line is a http request url
-      // obs.: /products.json means that a database called products will be created (if it does not exist)
-      final url = Uri.parse(
-          'flutter-shop-app-dd4d4-default-rtdb.firebaseio.com/products.json?auth=$authToken');
       // asynchronous (async) code = code that executes logic whilst other code continues executing
       final response = await http.post(
         url,
@@ -120,7 +134,7 @@ class Products with ChangeNotifier {
             'description': product.description,
             'imageUrl': product.imageUrl,
             'price': product.price,
-            'isFavorite': product.isFavorite,
+            'creatorId': userId,
           },
         ),
       );
@@ -144,9 +158,7 @@ class Products with ChangeNotifier {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
 
     if (prodIndex >= 0) {
-      final url = Uri.https(
-          'flutter-shop-app-dd4d4-default-rtdb.firebaseio.com',
-          '/products/$id.json?auth=$authToken');
+      final url = Uri.parse('https://flutter-shop-app-dd4d4-default-rtdb.firebaseio.com/products/$id.json?auth=$authToken');
       await http.patch(url,
           body: json.encode({
             'title': newProduct.title,
@@ -162,7 +174,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> deleteProduct(String id) async {
-    final url = Uri.parse('flutter-shop-app-dd4d4-default-rtdb.firebaseio.com/products/$id.json?auth=$authToken');
+    final url = Uri.parse(
+        'https://flutter-shop-app-dd4d4-default-rtdb.firebaseio.com/products/$id.json?auth=$authToken');
 
     // optimistic updating
     final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
