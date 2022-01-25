@@ -30,3 +30,4 @@ samples, guidance on mobile development, and a full API reference.
 - [Firebase Auth REST API](https://firebase.google.com/docs/reference/rest/auth)
 - [More on JSON Web Tokens](http://jwt.io/)
 - [Shared Preferences plugin](https://pub.dev/packages/shared_preferences/)
+- [Official Animation Docs](https://flutter.dev/docs/development/ui/animations)

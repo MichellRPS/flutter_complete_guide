@@ -29,12 +29,12 @@ class AuthScreen extends StatelessWidget {
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                stops: [0, 1],
+                stops: const [0, 1],
               ),
             ),
           ),
           SingleChildScrollView(
-            child: Container(
+            child: SizedBox(
               height: deviceSize.height,
               width: deviceSize.width,
               child: Column(
@@ -97,15 +97,62 @@ class AuthCard extends StatefulWidget {
   _AuthCardState createState() => _AuthCardState();
 }
 
-class _AuthCardState extends State<AuthCard> {
+class _AuthCardState extends State<AuthCard>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey();
   AuthMode _authMode = AuthMode.Login;
-  Map<String, String> _authData = {
+  final Map<String, String> _authData = {
     'email': '',
     'password': '',
   };
+
   var _isLoading = false;
   final _passwordController = TextEditingController();
+
+  AnimationController _controller;
+  Animation<Offset> _slideAnimation;
+  Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    // vsync optimizes performance because it assures that the animation only works for widgets that are visible on the screen
+    // obs.: requires the SingleTickerProviderStateMixin mixin
+    // SingleTickerProviderStateMixin notifies the widget when a frame update is due - animations need that information to play smoothly
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(
+        milliseconds: 300,
+      ),
+    );
+    _opacityAnimation = Tween(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeIn,
+      ),
+    );
+    // Tween = between
+    // Tween gives an object that knows how to animate between two values
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, -1.5),
+      end: const Offset(0, 0),
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.fastOutSlowIn,
+      ),
+    );
+    // _heightAnimation.addListener(() => setState(() {}));
+  }
+
+  // @override
+  // void dispose() {
+  //   super.dispose();
+  //   _controller.dispose();
+  // }
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -179,10 +226,14 @@ class _AuthCardState extends State<AuthCard> {
       setState(() {
         _authMode = AuthMode.Signup;
       });
+      // plays opacity animation
+      _controller.forward();
     } else {
       setState(() {
         _authMode = AuthMode.Login;
       });
+      // plays the opacity backwards
+      _controller.reverse();
     }
   }
 
@@ -194,13 +245,21 @@ class _AuthCardState extends State<AuthCard> {
         borderRadius: BorderRadius.circular(10.0),
       ),
       elevation: 8.0,
-      child: Container(
-        height: _authMode == AuthMode.Signup ? 320 : 260,
-        constraints:
-            BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
-        width: deviceSize.width * 0.75,
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
+      // with AnimatedBuilder() there's no need to set up animation listeners
+      // with AnimatedContainer() there's no need to use animation controllers
+      child: /* AnimatedBuilder(
+        animation: _heightAnimation,
+        builder: (ctx, ch) =>*/ AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeIn,
+            height: _authMode == AuthMode.Signup ? 320 : 260,
+            // height: _heightAnimation.value.height,
+            constraints:
+                BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
+                // BoxConstraints(minHeight: _heightAnimation.value.height),
+            width: deviceSize.width * 0.75,
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
@@ -231,19 +290,34 @@ class _AuthCardState extends State<AuthCard> {
                     _authData['password'] = value;
                   },
                 ),
-                if (_authMode == AuthMode.Signup)
-                  TextFormField(
-                    enabled: _authMode == AuthMode.Signup,
-                    decoration:
-                        const InputDecoration(labelText: 'Confirm Password'),
-                    obscureText: true,
-                    validator: _authMode == AuthMode.Signup
-                        ? (value) {
-                            if (value != _passwordController.text) {
-                              return 'Passwords do not match!';
-                            }
-                          }
-                        : null,
+                  AnimatedContainer(
+                    constraints: BoxConstraints(
+                      minHeight: _authMode == AuthMode.Signup ? 60 : 0,
+                      maxHeight: _authMode == AuthMode.Signup ? 120 : 0,
+                    ),
+                    duration: const Duration(
+                      milliseconds: 300,
+                    ),
+                    curve: Curves.easeIn,
+                    child: FadeTransition(
+                      opacity: _opacityAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: TextFormField(
+                          enabled: _authMode == AuthMode.Signup,
+                          decoration:
+                              const InputDecoration(labelText: 'Confirm Password'),
+                          obscureText: true,
+                          validator: _authMode == AuthMode.Signup
+                              ? (value) {
+                                  if (value != _passwordController.text) {
+                                    return 'Passwords do not match!';
+                                  }
+                                }
+                              : null,
+                        ),
+                      ),
+                    ),
                   ),
                 const SizedBox(
                   height: 20,
